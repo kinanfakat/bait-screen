@@ -1,0 +1,909 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>شاشة البيت</title>
+<style>
+  :root { --bg:#0f1a17; --card:#16241f; --line:#2f4a42; --green:#1f6f50; --gold:#e3be6e; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:#fff;
+         font-family:-apple-system,system-ui,"Segoe UI",sans-serif; display:flex; justify-content:center; }
+  .c { width:min(94vw,560px); padding:16px 0 40px; }
+  h1 { font-size:22px; margin:6px 0 12px; color:var(--gold); text-align:center; }
+  .tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .tabs button { margin:0; padding:12px 4px; font-size:16px; background:var(--card); border:1px solid var(--line); }
+  .tabs button.on { background:var(--green); border-color:var(--green); }
+  textarea, input[type=text], input[type=url] { width:100%; font-size:20px; padding:14px; border-radius:16px;
+         border:1px solid var(--line); background:var(--card); color:#fff; }
+  textarea { height:130px; resize:none; }
+  canvas { width:100%; aspect-ratio:16/9; background:var(--card); border-radius:16px; border:1px solid var(--line);
+           touch-action:none; display:block; }
+  .row { display:flex; gap:10px; margin-top:12px; align-items:center; }
+  .dot { width:38px; height:38px; border-radius:50%; border:3px solid transparent; }
+  .dot.on { border-color:#fff; }
+  button { margin-top:14px; width:100%; padding:16px; font-size:19px; font-weight:700; border:0; border-radius:16px;
+           background:var(--green); color:#fff; }
+  .row button { margin:0; flex:1; }
+  .soft { background:#3a2a2a; }
+  .big { font-size:30px; padding:22px 0; }
+  p.s { opacity:.75; text-align:center; min-height:1.4em; }
+  .hide { display:none; }
+  img.prev { width:100%; border-radius:16px; margin-top:12px; }
+  .q { font-size:22px; line-height:1.5; margin:8px 0 6px; text-align:center; white-space:pre-line; }
+  .opts button { background:var(--card); border:1px solid var(--line); text-align:right; padding:16px 18px; }
+  .opts button.picked { background:var(--gold); color:#1a1405; border-color:var(--gold); }
+  .muted { opacity:.7; text-align:center; white-space:pre-line; }
+  .word { font-size:44px; font-weight:800; text-align:center; color:var(--gold); margin:18px 0; line-height:1.3; }
+  .ok { background:#2e9e6a; }
+  .tabs { grid-template-columns:repeat(4,1fr); }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:12px 16px; margin-top:10px; }
+  .card ul, ul.log { margin:6px 0 0; padding:0 18px 0 0; line-height:1.7; }
+  ul.log { list-style:none; padding:0; margin-top:14px; }
+  ul.log li { background:var(--card); border-radius:12px; padding:8px 12px; margin-top:6px; }
+  .pend { color:var(--gold); text-align:center; font-size:19px; margin-top:10px; min-height:1.2em; }
+  .ans { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .ans button { margin:0; font-size:22px; padding:20px 0; }
+  .yes { background:#2e9e6a; } .no { background:#b33a3a; }
+  .opts.tf { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .opts.tf button { text-align:center; font-size:26px; padding:28px 0; margin:0; }
+  #tp { margin-top:0; position:relative; flex:1 1 auto; height:auto; min-height:200px; background:var(--card); border:1px solid var(--line); border-radius:16px;
+        touch-action:none; display:flex; align-items:center; justify-content:center; user-select:none; -webkit-user-select:none; }
+  #tp span { opacity:.45; font-size:14px; pointer-events:none; text-align:center; padding:0 12px; }
+  #pad:not(.hide) { display:flex; flex-direction:column; gap:8px; height:calc(100dvh - 84px); }
+  .padtop { display:flex; gap:8px; }
+  .padtop input { margin:0; flex:1; padding:10px 12px; font-size:16px; }
+  .padtop .mini { margin:0; width:auto; flex:0 0 72px; padding:10px 0; font-size:15px; }
+  #tpsc { position:absolute; top:8px; bottom:8px; left:8px; width:46px; border-radius:23px; background:rgba(255,255,255,.07);
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:8px 0; touch-action:none; }
+  #tpsc b { opacity:.5; font-size:13px; } #tpsc i { flex:1; width:4px; margin:6px 0; border-radius:2px; background:rgba(255,255,255,.12); }
+  .padst { margin:0; min-height:1.2em; font-size:12px; opacity:.7; text-align:center; }
+  .remote { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; direction:ltr; }
+  .remote button { margin:0; padding:0; height:46px; font-size:20px; line-height:1; background:var(--card); border:1px solid var(--line);
+    border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .remote button small { font-size:10px; opacity:.7; margin-top:2px; font-weight:400; }
+  .remote button.dir { font-size:22px; }
+  .remote button.ok { background:var(--green); border-color:var(--green); font-size:18px; }
+  .dpad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; direction:ltr; }
+  .dpad button { margin:0; font-size:24px; padding:16px 0; background:var(--card); border:1px solid var(--line); }
+  .dpad button.ok { background:var(--green); border-color:var(--green); }
+  .tabs { display:block; margin-bottom:6px; }
+  .tabs.hide, .bar.hide { display:none; }
+  .tabs p.g { margin:16px 4px 4px; font-size:14px; color:var(--gold); opacity:.9; }
+  .tabs button { display:flex; flex-direction:column; align-items:flex-start; width:100%; margin:6px 0; padding:13px 16px;
+                 background:var(--card); border:1px solid var(--line); border-radius:14px; text-align:right; }
+  .tabs button b { font-size:19px; }
+  .tabs button span { font-size:14px; font-weight:400; opacity:.7; margin-top:2px; }
+  .rm { display:grid; grid-template-columns:1fr 1fr 1.4fr 1fr 1fr; gap:6px; direction:ltr; }
+  .rm button { margin:0; padding:12px 0; font-size:20px; background:var(--card); border:1px solid var(--line); }
+  .rm button.ok { background:var(--green); border-color:var(--green); }
+  .glist button { margin:6px 0; padding:13px 16px; font-size:18px; text-align:right; background:var(--card); border:1px solid var(--line); border-radius:14px; }
+  body.guest [data-full], body.guest #remote { display:none !important; }
+  .scr { position:relative; width:100%; aspect-ratio:16/9; background:#000; border-radius:12px; overflow:hidden; touch-action:none; }
+  .scr img { width:100%; height:100%; object-fit:contain; display:block; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .scrfloat { position:absolute; top:6px; left:6px; display:flex; gap:6px; direction:ltr; z-index:3; }
+  .scrfloat button { margin:0; width:32px; height:32px; padding:0; font-size:15px; border-radius:10px; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.25); }
+  .scrfloat .inbig { display:none; } .scr.big .scrfloat .inbig { display:block; }
+  .scrhint { font-size:12px; margin:6px 0; }
+  .srow { display:flex; gap:6px; margin-top:6px; direction:ltr; }
+  .srow button { margin:0; padding:0; height:40px; font-size:15px; border-radius:12px; flex:1; background:var(--card); border:1px solid var(--line); }
+  .srow button.home { flex:2; height:50px; font-size:18px; background:var(--green); border-color:var(--green); }
+  .srow button.back { flex:1.3; height:50px; font-size:16px; }
+  .srow.small button { height:36px; font-size:14px; }
+  .srow.small button.ok { background:var(--green); border-color:var(--green); }
+  .kbbar { position:absolute; left:6px; right:6px; bottom:6px; display:flex; gap:6px; z-index:4; }
+  .kbbar.hide { display:none; }
+  .kbbar input { margin:0; flex:1; padding:10px; font-size:16px; background:rgba(10,20,16,.92); }
+  .kbbar button { margin:0; width:auto; padding:0 14px; font-size:15px; border-radius:12px; }
+  .kbbar button.x { background:rgba(0,0,0,.6); }
+  /* enlarged: the TV's screen over the whole phone (turn the phone sideways), the small buttons on it */
+  .scr.big { position:fixed; inset:0; width:100vw; height:100dvh; aspect-ratio:auto; border-radius:0; z-index:50; }
+  .scr:fullscreen { width:100vw; height:100vh; aspect-ratio:auto; border-radius:0; }
+  #scrdot { position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px; border-radius:50%; border:3px solid #ffd27a; pointer-events:none; }
+  .seg button { padding:10px 6px; font-size:15px; }
+  .seg button.on { outline:3px solid #ffd27a; }
+  .app { display:flex; align-items:center; gap:12px; padding:10px; margin-top:8px; border-radius:14px; background:rgba(255,255,255,.07); }
+  .app img { width:44px; height:44px; flex:0 0 44px; border-radius:10px; }
+  .app .t { flex:1; min-width:0; }
+  .app .t b { display:block; font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .app .t small { opacity:.65; font-size:12px; direction:ltr; display:block; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .app .acts { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .app .acts button { margin:0; padding:8px 10px; font-size:13px; width:auto; flex:1; border-radius:10px; }
+  .bar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .bar button { margin:0; width:auto; padding:10px 14px; font-size:16px; }
+  .bar b { flex:1; text-align:center; font-size:19px; color:var(--gold); }
+</style>
+</head>
+<body>
+<div class="c">
+  <h1>شاشة البيت</h1>
+  <div id="bar" class="bar hide">
+    <button class="soft" onclick="history.back()">☰ القائمة</button>
+    <b id="bt"></b>
+    <button id="bc" class="soft" onclick="clearTab(); say('تم المسح')">مسح</button>
+  </div>
+  <div id="remote" class="hide">
+    <div class="rm">
+      <button onclick="gameKey('left')">◀</button><button onclick="gameKey('up')">▲</button>
+      <button class="ok" onclick="gameKey('ok')">OK</button>
+      <button onclick="gameKey('down')">▼</button><button onclick="gameKey('right')">▶</button>
+    </div>
+    <p class="muted" style="margin:4px 0 10px;font-size:13px">أزرار التلفزيون من هاتفك: OK للبدء والمتابعة · الأسهم للاختيار</p>
+  </div>
+  <div id="menu" class="tabs">
+    <p class="g" data-full>إرسال إلى التلفزيون</p>
+    <button data-t="write" data-full><b>رسالة أو تذكير</b><span>نص يظهر على الشاشة الآن أو في وقت تحدده</span></button>
+    <button data-t="draw" data-full><b>رسم</b><span>ارسم بإصبعك فيظهر على التلفزيون</span></button>
+    <button data-t="link" data-full><b>رابط</b><span>افتح فيديو أو صفحة على التلفزيون</span></button>
+    <button data-t="photo" data-full><b>صورة</b><span>اعرض صورة من هاتفك</span></button>
+    <button data-t="apk" data-full><b>تثبيت تطبيق</b><span>أرسل ملف APK من هاتفك وثبّته على التلفزيون</span></button>
+    <p class="g" data-full>التحكم</p>
+    <button data-t="screen" data-full><b>شاشة التلفزيون</b><span>شاهد الشاشة على هاتفك والمس لتضغط عليها</span></button>
+    <button data-t="pad" data-full><b>ماوس وريموت</b><span>لوح لمس كبير ونقرة دقيقة وأزرار الريموت والكتابة</span></button>
+    <button data-t="apps" data-full><b>التطبيقات</b><span>كل تطبيقات التلفزيون: فتح، حذف، معلومات، تثبيت</span></button>
+    <button data-mem data-full><b>تفريغ الذاكرة</b><span id="memline">يسكّر التطبيقات المفتوحة بالخلفية · يتم تلقائياً كل ليلة</span></button>
+    <button data-t="ctrl" data-full><b>الصوت والأذان</b><span>رفع الصوت وخفضه وإيقاف الأذان</span></button>
+    <p class="g">الألعاب</p>
+    <button data-t="quiz"><b>مسابقة · صح أم خطأ</b><span>كل لاعب يجيب من هاتفه</span></button>
+    <button data-t="act"><b>بدون كلام</b><span>تمثيل ورسم وتخمين</span></button>
+    <button data-t="who"><b>من أنا؟</b><span>اسأل وخمّن الشخصية</span></button>
+    <button data-t="teams" data-full><b>ألعاب الفرق</b><span>اختر اللعبة وأدرها من هاتفك</span></button>
+  </div>
+
+  <div id="write" class="hide">
+    <textarea id="t" maxlength="200" placeholder="اكتب هني..."></textarea>
+    <button onclick="send()">أرسل للتلفزيون</button>
+    <div class="card" style="margin-top:18px">
+      <b>⏰ ذكّرني على التلفزيون</b>
+      <p class="muted" style="margin:6px 0 0;text-align:right">اكتب الملاحظة، أو اكبس زر الميكروفون 🎤 بكيبورد الموبايل واحكيها</p>
+      <input id="rt" type="text" maxlength="200" placeholder="مثلاً: طفّي السخّان" style="margin-top:10px">
+      <div class="row">
+        <button class="soft" onclick="remind(10)">بعد 10 د</button>
+        <button class="soft" onclick="remind(30)">بعد 30 د</button>
+        <button class="soft" onclick="remind(60)">بعد ساعة</button>
+      </div>
+      <div class="row">
+        <input id="rtime" type="time" style="flex:1;font-size:20px;padding:12px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:#fff">
+        <button onclick="remind(document.getElementById('rtime').value)">ذكّرني بهالساعة</button>
+      </div>
+      <p class="muted" id="rlist" style="text-align:right"></p>
+      <button class="soft" onclick="remindClear()">امسح كل التذكيرات</button>
+    </div>
+  </div>
+
+  <div id="draw" class="hide">
+    <canvas id="cv"></canvas>
+    <div class="row" id="colors"></div>
+    <div class="row"><button class="soft" onclick="clr()">امسح</button></div>
+  </div>
+
+  <div id="link" class="hide">
+    <input id="u" type="text" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="الصق أي رابط هنا">
+    <div class="row"><button onclick="pasteLink()">📋 لصق</button><button onclick="openLink()">افتحه على التلفزيون</button></div>
+    <p class="muted">روابط يوتيوب تُفتح في SmartTube، وأي رابط آخر في متصفح التلفزيون.
+يمكن لصق نص المشاركة كما هو: يُؤخذ الرابط منه.</p>
+  </div>
+
+  <div id="photo" class="hide">
+    <input id="f" type="file" accept="image/*">
+    <img id="pv" class="prev hide" alt="">
+    <button onclick="sendPhoto()">اعرضها على التلفزيون</button>
+    <p class="muted">تطلع بنص الشاشة 30 ثانية</p>
+  </div>
+
+  <div id="apk" class="hide">
+    <input id="af" type="file" accept=".apk,application/vnd.android.package-archive">
+    <button onclick="sendApk()">أرسله إلى التلفزيون</button>
+    <p class="muted" id="ainfo">بعد الإرسال تظهر على التلفزيون نافذة «تثبيت» · اضغطها بالريموت.
+أول مرة يطلب التلفزيون السماح لتطبيق «سورة الكهف» بتثبيت التطبيقات: اسمح له من النافذة نفسها.
+ثبّت فقط تطبيقات تثق بمصدرها.</p>
+  </div>
+
+  <div id="ctrl" class="hide">
+    <div class="row"><button class="big" onclick="ctl('vol','up')">🔊 +</button><button class="big" onclick="ctl('vol','down')">🔉 −</button></div>
+    <div class="row"><button class="soft" onclick="ctl('vol','mute')">🔇 كتم / إرجاع الصوت</button></div>
+    <div class="row"><button class="soft" onclick="ctl('stopadhan','')">⏹ أوقف الأذان</button></div>
+  </div>
+
+  <div id="screen" class="hide">
+    <div class="scr" id="scrbox">
+      <img id="scrimg" alt=""><div id="scrdot" class="hide"></div>
+      <div class="scrfloat">
+        <button onclick="scrBig()" id="scrbig" title="تكبير">⛶</button>
+        <button class="inbig" onclick="sk('back')" title="رجوع">↩</button>
+        <button class="inbig" onclick="sk('home')" title="الرئيسية">⌂</button>
+        <button class="inbig" onclick="kbOpen()" title="كيبورد">⌨</button>
+      </div>
+      <div class="kbbar hide" id="kbbar">
+        <input id="kbin" type="text" autocomplete="off" autocapitalize="off" placeholder="اكتب هنا · يُكتب في خانة التلفزيون">
+        <button onclick="kbEnter()">بحث ↵</button><button class="x" onclick="kbClose()">✕</button>
+      </div>
+    </div>
+    <p class="muted scrhint" id="scrinfo">المس لتضغط · اضغط مطوّلاً للقائمة · اسحب للتمرير · ⛶ للتكبير</p>
+    <div class="srow"><button class="home" onclick="sk('home')">⌂ الرئيسية</button><button class="back" onclick="sk('back')">↩ رجوع</button></div>
+    <div class="srow small">
+      <button onclick="sk('left')">◀</button><button onclick="sk('up')">▲</button><button class="ok" onclick="sk('ok')">OK</button><button onclick="sk('down')">▼</button><button onclick="sk('right')">▶</button>
+      <button onclick="sk('voldown')">🔉</button><button onclick="sk('volup')">🔊</button><button onclick="kbOpen()">⌨</button>
+    </div>
+  </div>
+
+  <div id="apps" class="hide">
+    <div class="row"><input id="aq" type="search" placeholder="ابحث باسم التطبيق" oninput="appsShow()" style="margin:0"></div>
+    <div class="row seg"><button id="af0" onclick="appsTab(0)">تطبيقاتي</button><button id="af1" onclick="appsTab(1)">النظام</button><button id="af2" onclick="appsTab(2)">المعطّلة</button></div>
+    <p class="muted" id="acount"></p>
+    <div id="alist"></div>
+    <p class="g" style="margin-top:22px">تثبيت تطبيق جديد</p>
+    <div class="row"><input id="sq" type="text" placeholder="اسم التطبيق في متجر Play" style="margin:0"><button onclick="storeSearch()" style="flex:0 0 110px">ابحث</button></div>
+    <button onclick="openTab('apk')">أو أرسل ملف APK من هاتفك</button>
+  </div>
+
+  <div id="pad" class="hide">
+    <div class="padtop">
+      <input id="pt" type="text" autocomplete="off" autocapitalize="off" placeholder="⌨ اكتب هنا · يُكتب في خانة التلفزيون">
+      <button class="mini" onclick="padKey('enter')">إدخال</button>
+    </div>
+    <div id="tp">
+      <span id="tph">حرّك إصبعك = المؤشر · كبسة = نقرة · ضغطة مطوّلة = قائمة<br>إصبعان أو الشريط الجانبي = تمرير</span>
+      <div id="tpsc" aria-label="تمرير"><b>▲</b><i></i><b>▼</b></div>
+    </div>
+    <p class="padst" id="padst"></p>
+    <div class="remote">
+      <button onclick="padKey('back')">↩<small>رجوع</small></button>
+      <button class="dir" onclick="padKey('up')">▲</button>
+      <button onclick="padKey('home')">⌂<small>الرئيسية</small></button>
+      <button class="dir" onclick="padKey('left')">◀</button>
+      <button class="ok" onclick="padKey('ok')">OK</button>
+      <button class="dir" onclick="padKey('right')">▶</button>
+      <button onclick="padKey('voldown')">🔉<small>خفض</small></button>
+      <button class="dir" onclick="padKey('down')">▼</button>
+      <button onclick="padKey('volup')">🔊<small>رفع</small></button>
+      <button onclick="padKey('menu')">☰<small>القائمة</small></button>
+      <button onclick="padKey('mute')">🔇<small>كتم</small></button>
+      <button onclick="padSend('r')">🖱<small>نقرة يمين</small></button>
+    </div>
+  </div>
+  </div>
+
+  <div id="teams" class="hide">
+    <p class="muted" style="margin-top:0">اختر لعبة فتُفتح على التلفزيون، ثم أدرها بالأزرار في الأعلى</p>
+    <div class="glist">
+      <button onclick="gameOpen('teams:quiz')">مسابقة العائلة</button>
+      <button onclick="gameOpen('teams:tf')">صح أم خطأ</button>
+      <button onclick="gameOpen('teams:who')">من أنا؟</button>
+      <button onclick="gameOpen('teams:ayah')">أكمل الآية</button>
+      <button onclick="gameOpen('teams:proverb')">أكمل المثل</button>
+      <button onclick="gameOpen('teams:headsup')">بدون كلام</button>
+      <button onclick="gameOpen('teams:taboo')">الكلمات الممنوعة</button>
+      <button onclick="gameOpen('teams:letters')">لعبة الحروف</button>
+      <button onclick="gameOpen('memory')">لعبة الذاكرة</button>
+    </div>
+    <div class="row"><button class="soft" onclick="gameKey('back')">إغلاق اللعبة على التلفزيون</button></div>
+  </div>
+
+  <div id="quiz" class="hide">
+    <div class="row" style="margin:0 0 12px" data-full>
+      <button onclick="gameOpen('quiz')">مسابقة العائلة</button>
+      <button onclick="gameOpen('tf')">صح أم خطأ</button>
+    </div>
+    <div id="qjoin">
+      <input id="qn" type="text" maxlength="16" placeholder="اسمك في اللعبة">
+      <button onclick="join()">ادخل المسابقة</button>
+      <p class="muted">افتح «مسابقة العائلة» أو «صح أم خطأ» على التلفزيون أولاً</p>
+    </div>
+    <div id="qplay" class="hide">
+      <p class="muted" id="qhead"></p>
+      <div class="q" id="qq"></div>
+      <div class="opts" id="qo"></div>
+      <p class="muted" id="qinfo"></p>
+      <p class="muted" id="qmore" style="margin-top:18px"></p>
+      <button onclick="addLocal()">لاعب آخر على هذا الجوال</button>
+    </div>
+  </div>
+
+  <div id="act" class="hide">
+    <p class="muted" id="ahead">افتح «بدون كلام» على التلفزيون أولاً</p>
+    <div id="aidle">
+      <button class="big" onclick="actStart()">أنا سأمثّل · ابدأ الجولة</button>
+      <p class="muted">الكلمة تظهر عندك فقط · أخفِ الشاشة عن الآخرين</p>
+    </div>
+    <div id="aplay" class="hide">
+      <p class="muted" id="acat"></p>
+      <div class="word" id="aword"></div>
+      <p class="muted" id="atime"></p>
+      <div id="adraw" class="hide">
+        <canvas id="acv"></canvas>
+        <div class="row" id="acolors"></div>
+        <div class="row"><button class="soft" onclick="actClear()">امسح الرسمة</button></div>
+      </div>
+      <div class="row"><button class="big ok" onclick="actSend('got')">✓ إجابة صحيحة</button></div>
+      <div class="row"><button class="soft" id="askip" onclick="actSend('skip')">تخطٍّ</button></div>
+    </div>
+  </div>
+
+  <div id="who" class="hide">
+    <div id="wjoin">
+      <input id="wn" type="text" maxlength="16" placeholder="اسمك في اللعبة">
+      <button onclick="whoJoin()">ادخل اللعبة</button>
+      <p class="muted">افتح «من أنا؟» على التلفزيون أولاً</p>
+    </div>
+    <div id="wplay" class="hide">
+      <p class="muted" id="whead"></p>
+      <div id="whost" class="hide">
+        <p class="muted">الشخصية السرية · لا تُرِها لأحد</p>
+        <div class="word" id="wname"></div>
+        <p class="muted" id="wcat"></p>
+        <div class="card"><b>معلومات تساعدك على الإجابة:</b><ul id="wfacts"></ul></div>
+        <div class="pend" id="wpend"></div>
+        <div class="ans">
+          <button class="yes" onclick="whoAns('yes')">✓ نعم</button>
+          <button class="no" onclick="whoAns('no')">✗ لا</button>
+          <button onclick="whoAns('maybe')">أحياناً</button>
+          <button onclick="whoAns('idk')">لا أعرف</button>
+        </div>
+        <div class="row"><button class="soft" id="whint" onclick="whoCmd('hint')">أعطهم تلميحاً</button>
+          <button class="soft" onclick="if(confirm('هل تريد كشف الجواب؟')) whoCmd('giveup')">اكشف الجواب</button></div>
+        <p class="muted">تلميحاتك: <span id="whints"></span></p>
+      </div>
+      <div id="wguess" class="hide">
+        <p class="muted" id="wcat2"></p>
+        <input id="wq" type="text" maxlength="80" placeholder="اكتب سؤالك (نعم أو لا)…">
+        <button class="soft" onclick="whoAsk()">اسأل</button>
+        <input id="wg" type="text" maxlength="40" placeholder="هل عرفتها؟ اكتب الاسم…">
+        <button onclick="whoGuess()">خمّن</button>
+        <p class="muted">التخمين الخطأ يُحسب سؤالاً</p>
+      </div>
+      <ul class="log" id="wlog"></ul>
+    </div>
+  </div>
+
+  <p class="s" id="s"></p>
+</div>
+<script>
+function $(i){ return document.getElementById(i); }
+function say(t){ $('s').textContent = t; }
+var tabs = ['write','draw','link','photo','apk','screen','apps','pad','ctrl','quiz','act','who','teams'];
+var GUEST = document.body.className.indexOf('guest') >= 0;
+var GAMES = {quiz:1, act:1, who:1, teams:1}, CLEARS = {write:1, draw:1, link:1, photo:1, pad:1};
+var titles = {}, cur = null;
+function openTab(t){
+  tabs.forEach(function(x){ $(x).className = x === t ? '' : 'hide'; });
+  $('menu').className = 'tabs hide';
+  $('bar').className = 'bar';
+  $('bt').textContent = titles[t] || '';
+  cur = t;
+  // the TV's keys for the games, the «مسح» button where there is something to clear
+  $('remote').className = GAMES[t] ? '' : 'hide';
+  $('bc').style.visibility = CLEARS[t] ? 'visible' : 'hidden';
+  // a game chosen here opens on the TV by itself
+  if (!GUEST && t === 'who') gameOpen('who', true);
+  if (!GUEST && t === 'act') gameOpen('charades', true);
+  if (t === 'draw') fit();
+  if (t === 'screen') scrStart(); else scrOn = false;
+  if (t === 'apps') appsLoad();
+  if (t === 'pad') { padPrecise(); padFit(); }
+  if (t === 'act') actPoll();
+  if (t === 'who' && whoMe) whoPoll();
+  if (t === 'quiz' && me && !polling) { polling = true; poll(); }
+  say('');
+}
+// what was typed, the chosen picture and the drawing do not stay behind when the section is left
+function clearTab(){
+  ['t','u','rt','pt','rtime'].forEach(function(i){ var e=$(i); if(e) e.value=''; });
+  var f=$('f'); if(f) f.value='';
+  photoBlob = null;
+  var pv=$('pv'); if(pv){ pv.className='prev hide'; pv.removeAttribute('src'); }
+  if (cur === 'draw') { try { clr(); } catch(e){} }
+}
+function goMenu(){
+  scrOn = false;
+  try { if(document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+  $('scrbox').classList.remove('big'); kbClose(true);
+  clearTab();
+  tabs.forEach(function(x){ $(x).className = 'hide'; });
+  $('bar').className = 'bar hide';
+  $('remote').className = 'hide';
+  $('menu').className = 'tabs';
+  cur = null;
+  say('');
+}
+// «تفريغ الذاكرة»: no section, just done; the app in front stays open
+function memClean(){
+  var l=$('memline'); l.textContent='جارٍ التفريغ…';
+  fetch('mem/clean').then(function(r){ return r.text(); }).then(function(t){
+    if(t!=='ok'){ l.textContent='يتم التفريغ الآن أو الأذان يعمل · حاول بعد قليل'; return; }
+    setTimeout(function(){ fetch('mem/state').then(function(r){ return r.text(); }).then(function(s){
+      var m=s.match(/(\d+) ← (\d+)/); l.textContent = m ? ('✓ تم · المتاح الآن '+m[2]+' ميغا (كان '+m[1]+')') : '✓ تم';
+    }); }, 9000);
+  }).catch(function(){ l.textContent='تعذّر الاتصال بالتلفزيون'; });
+}
+document.querySelectorAll('#menu button').forEach(function(b){
+  if (b.hasAttribute('data-mem')) { b.onclick = memClean; return; }
+  titles[b.dataset.t] = b.querySelector('b').textContent;
+  b.onclick = function(){
+    // the phone's own Back button leads to the list too
+    try { history.pushState({t:b.dataset.t}, ''); } catch(e){}
+    openTab(b.dataset.t);
+  };
+});
+window.addEventListener('popstate', function(){ if (cur) goMenu(); });
+
+function post(path, body){ return fetch(path, {method:'POST', body:body}).then(function(r){ if(r.status===403){ location.href='../../'; } return r; }); }
+function gameOpen(id, quiet){ post('game/open', id).then(function(){ if(!quiet) say('فُتحت اللعبة على التلفزيون'); }).catch(bad); }
+function gameKey(k){ post('game/key', k).catch(bad); }
+function ok(){ say('تم الإرسال'); }
+// the TV's screen on the phone: the next picture is asked for as soon as the last one is shown
+var scrOn=false, scrSeq=0;
+function scrStart(){
+  if(scrOn) return; scrOn=true; var mine=++scrSeq, img=$('scrimg'), fails=0, last=null;
+  function next(){
+    if(!scrOn || mine!==scrSeq) return;
+    fetch('screen/frame?t='+Date.now()).then(function(r){
+      if(!r.ok) throw 0;
+      // a text field touched on the TV: the keyboard comes up here, like in any phone app
+      kbSeen(r.headers.get('X-Edit')==='1', decodeURIComponent(r.headers.get('X-Edit-Text')||''));
+      return r.blob();
+    }).then(function(b){
+      fails=0; var u=URL.createObjectURL(b); img.src=u; if(last) URL.revokeObjectURL(last); last=u; setTimeout(next, 120);
+    }).catch(function(){ if(++fails>3) $('scrinfo').textContent='تعذّر عرض الشاشة · تأكد أن خدمة «زر الرئيسية» تعمل'; setTimeout(next, 1500); });
+  }
+  next();
+}
+// ⛶: the TV's screen over the whole phone; again (or the phone's Back) to make it small
+function scrBig(){
+  var box=$('scrbox'), on=!box.classList.contains('big');
+  box.classList.toggle('big', on); $('scrbig').textContent = on ? '✕' : '⛶';
+  try {
+    if(on){ if(box.requestFullscreen) box.requestFullscreen().then(function(){ try{ screen.orientation.lock('landscape'); }catch(e){} }).catch(function(){}); }
+    else if(document.fullscreenElement) document.exitFullscreen();
+  } catch(e){}
+}
+document.addEventListener('fullscreenchange', function(){
+  if(!document.fullscreenElement){ var box=$('scrbox'); box.classList.remove('big'); $('scrbig').textContent='⛶'; }
+});
+// the keyboard: comes up by itself when a text field has the focus on the TV, or with ⌨
+var kbShown=false, kbDismissed=false, kbTimer=null;
+function kbSeen(on, text){
+  if(!on){ kbDismissed=false; if(kbShown && document.activeElement!==$('kbin')) kbClose(true); return; }
+  if(kbShown || kbDismissed) return;
+  kbShow(text, true);
+}
+function kbShow(text, auto){
+  kbShown=true; $('kbbar').className='kbbar'; var i=$('kbin'); if(text!=null && document.activeElement!==i) i.value=text;
+  i.focus();
+  if(auto) say('⌨ خانة كتابة مفتوحة على التلفزيون · اكتب هنا');
+}
+function kbOpen(){ kbDismissed=false; kbShow(null, false); }
+function kbClose(quiet){ kbShown=false; if(!quiet) kbDismissed=true; $('kbbar').className='kbbar hide'; $('kbin').blur(); }
+function kbEnter(){ post('pad', 'k enter'); kbClose(true); kbDismissed=true; }
+(function(){
+  var i=$('kbin');
+  // the whole text as typed, a moment after the last key (Arabic too)
+  i.addEventListener('input', function(){ clearTimeout(kbTimer); kbTimer=setTimeout(function(){ post('pad', 't '+i.value); }, 250); });
+  i.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); clearTimeout(kbTimer); post('pad', 't '+i.value).then(function(){ kbEnter(); }); } });
+})();
+(function(){
+  var img=$('scrimg'), held=null, start=null;
+  function frac(e){ var r=img.getBoundingClientRect(); return [Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)), Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))]; }
+  function dot(f){ var d=$('scrdot'); d.style.left=(f[0]*100)+'%'; d.style.top=(f[1]*100)+'%'; d.className=''; setTimeout(function(){ d.className='hide'; }, 500); }
+  img.addEventListener('pointerdown', function(e){ start=frac(e); held=setTimeout(function(){ held=null; dot(start); post('screen/hold', start[0].toFixed(4)+' '+start[1].toFixed(4)); }, 600); });
+  img.addEventListener('pointermove', function(e){
+    if(!start) return; var f=frac(e), r=img.getBoundingClientRect(), dy=(f[1]-start[1])*r.height;
+    if(Math.abs(dy)>40){ if(held){ clearTimeout(held); held=null; } }
+  });
+  img.addEventListener('pointerup', function(e){
+    if(!start) return; var f=frac(e), r=img.getBoundingClientRect(), dy=(f[1]-start[1])*r.height, s0=start; start=null;
+    // a drag up or down: the list or the video under the finger moves (up: the next one)
+    if(Math.abs(dy)>40){ post('screen/swipe', s0[0].toFixed(4)+' '+s0[1].toFixed(4)+' '+(dy<0?-1:1)); return; }
+    if(held){ clearTimeout(held); held=null; dot(s0); post('screen/tap', s0[0].toFixed(4)+' '+s0[1].toFixed(4)); } });
+  img.addEventListener('pointercancel', function(){ if(held){ clearTimeout(held); held=null; } });
+  img.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+})();
+function sk(k){ post('pad', 'k '+k); }
+function swipeMid(d){ post('screen/swipe', '0.5000 0.5000 '+d); }
+function stype(){ var t=$('sct').value; if(!t) return; post('pad', 't '+t).then(function(){ say('أُرسل النص'); $('sct').value=''; }).catch(bad); }
+
+// every app on the TV
+var appsAll=[], appsT=0;
+function appsLoad(){ $('acount').textContent='جاري التحميل…';
+  fetch('apps/list').then(function(r){ return r.json(); }).then(function(a){ appsAll=a; appsShow(); }).catch(function(){ $('acount').textContent='تعذّر تحميل القائمة'; }); }
+function appsTab(t){ appsT=t; appsShow(); }
+function esc(t){ return String(t).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function mb(n){ return n>=1048576 ? (n/1048576).toFixed(1)+' م.ب' : Math.round(n/1024)+' ك.ب'; }
+function appsShow(){
+  [0,1,2].forEach(function(i){ $('af'+i).className = i===appsT ? 'on' : ''; });
+  var q=($('aq').value||'').trim().toLowerCase(), box=$('alist'); box.innerHTML='';
+  var shown=appsAll.filter(function(a){
+    var inTab = appsT===0 ? (!a.sys && a.on) : appsT===1 ? (a.sys && a.on) : !a.on;
+    return inTab && (!q || a.n.toLowerCase().indexOf(q)>=0 || a.p.toLowerCase().indexOf(q)>=0);
+  });
+  $('acount').textContent = shown.length+' تطبيق' + (appsT===0 ? ' · الأحدث أولاً' : '');
+  shown.slice(0, 200).forEach(function(a){
+    var d=document.createElement('div'); d.className='app';
+    d.innerHTML='<img loading="lazy" src="apps/icon?p='+encodeURIComponent(a.p)+'" alt=""><div class="t"><b>'+esc(a.n)+'</b><small>'
+      +esc(a.p)+'</small><small>'+esc((a.v?('الإصدار '+a.v+' · '):'')+a.d+(a.s?(' · '+mb(a.s)):''))+'</small><div class="acts"></div></div>';
+    var acts=d.querySelector('.acts');
+    function btn(label, route){ var b=document.createElement('button'); b.textContent=label; b.onclick=function(){ appAct(route, a); }; acts.appendChild(b); }
+    if(a.open) btn('فتح', 'apps/open');
+    if(!a.sys) btn(a.upd ? 'حذف التحديثات' : 'حذف', 'apps/uninstall');
+    btn('معلومات', 'apps/info');
+    btn('المتجر', 'apps/store');
+    box.appendChild(d);
+  });
+}
+function appAct(route, a){
+  if(route==='apps/uninstall' && !confirm((a.upd ? 'حذف تحديثات «'+a.n+'»؟ يبقى التطبيق بنسخة الشركة الأصلية.' : 'حذف «'+a.n+'» من التلفزيون؟')+'\nسيسأل التلفزيون مرة أخرى للتأكيد.')) return;
+  say('…');
+  post(route, a.p).then(function(r){ return r.text(); }).then(function(t){
+    var i=t.indexOf('|'); say(i>=0 ? t.slice(i+1) : t);
+    if(route==='apps/uninstall' && t.indexOf('ok|')===0) setTimeout(appsLoad, 15000);
+  }).catch(bad);
+}
+function storeSearch(){ var q=$('sq').value.trim(); if(!q){ say('اكتب اسم التطبيق'); return; }
+  post('apps/store', q).then(function(r){ return r.text(); }).then(function(t){ var i=t.indexOf('|'); say(i>=0 ? t.slice(i+1) : t); }).catch(bad); }
+// an app from the phone: sent with its progress, then what the TV's installer said
+var apkPoll=null;
+function sendApk(){
+  var f=$('af').files[0]; if(!f){ say('اختر ملف التطبيق أول'); return; }
+  if(!/\.apk$/i.test(f.name)){ say('الملف ليس تطبيق APK'); return; }
+  var x=new XMLHttpRequest(); x.open('POST','apk');
+  x.upload.onprogress=function(e){ if(e.lengthComputable) say('جاري الإرسال… '+Math.round(e.loaded*100/e.total)+'%'); };
+  x.onload=function(){
+    if(x.status===403){ location.href='../../'; return; }
+    if(x.responseText!=='ok'){ say(x.responseText==='size' ? 'الملف كبير جداً' : 'لم يكتمل الإرسال · أعد المحاولة'); return; }
+    say('وصل الملف · انظر إلى التلفزيون'); clearInterval(apkPoll);
+    var n=0; apkPoll=setInterval(function(){
+      if(++n>150){ clearInterval(apkPoll); return; }
+      fetch('apk/state').then(function(r){ return r.text(); }).then(function(t){
+        var i=t.indexOf('|'); if(i<0) return; say(t.slice(i+1));
+        if(t.indexOf('ok|')===0 || t.indexOf('fail|')===0) clearInterval(apkPoll);
+      }).catch(function(){});
+    }, 2000);
+  };
+  x.onerror=bad; say('جاري الإرسال…'); x.send(f);
+}
+function bad(){ say('لم تصل · تأكد أنك على شبكة الواي فاي نفسها'); }
+
+// write
+function send(){ var t=$('t'); if(!t.value.trim()) return; post('send', t.value).then(function(){ ok(); t.value=''; }).catch(bad); }
+
+// draw (same protocol as before)
+var cv=$('cv'), cx=cv.getContext('2d'), col='#ffffff', q=[], last=null, cont=false;
+['#ffffff','#f5c542','#4ade80','#f87171','#60a5fa'].forEach(function(c,i){
+  var b=document.createElement('div'); b.className='dot'+(i?'':' on'); b.style.background=c;
+  b.onclick=function(){ col=c; document.querySelectorAll('.dot').forEach(function(x){ x.className='dot'; }); b.className='dot on'; };
+  $('colors').appendChild(b);
+});
+function fit(){ var r=cv.getBoundingClientRect(); cv.width=r.width*2; cv.height=r.height*2; }
+function pt(e){ var r=cv.getBoundingClientRect(); return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]; }
+function line(a,b){ cx.strokeStyle=col; cx.lineWidth=6; cx.lineCap='round'; cx.beginPath();
+  cx.moveTo(a[0]*cv.width,a[1]*cv.height); cx.lineTo(b[0]*cv.width,b[1]*cv.height); cx.stroke(); }
+cv.onpointerdown=function(e){ cv.setPointerCapture(e.pointerId); last=pt(e); cont=false; q=[last]; };
+cv.onpointermove=function(e){ if(!last) return; var p=pt(e); line(last,p); last=p; q.push(p); };
+cv.onpointerup=cv.onpointercancel=function(){ flush(); last=null; };
+function flush(){ if(q.length<1) return;
+  var s=(cont?'+':'')+col+' '+q.map(function(p){ return p[0].toFixed(4)+','+p[1].toFixed(4); }).join(' ');
+  if(last){ q=[last]; cont=true; } else q=[]; post('draw', s); }
+setInterval(function(){ if(last && q.length>1) flush(); }, 80);
+function clr(){ cx.clearRect(0,0,cv.width,cv.height); post('clear',''); }
+
+// link
+function openLink(){ var u=$('u').value.trim(); if(!u){ say('الصق الرابط أولاً'); return; }
+  say('جاري الفتح…');
+  post('open', u).then(function(r){ return r.text(); }).then(function(t){
+    var i=t.indexOf('|'), msg=i>=0 ? t.slice(i+1) : '';
+    if(t.indexOf('ok|')===0){ say('انفتح على التلفزيون · '+msg); $('u').value=''; } else say(msg || 'لم يُفتح');
+  }).catch(bad); }
+function pasteLink(){
+  if(navigator.clipboard && navigator.clipboard.readText){
+    navigator.clipboard.readText().then(function(t){ $('u').value=t||''; if(t) openLink(); else say('الحافظة فارغة'); })
+      .catch(function(){ say('اضغط مطوّلاً على الخانة واختر «لصق»'); $('u').focus(); });
+  } else { say('اضغط مطوّلاً على الخانة واختر «لصق»'); $('u').focus(); }
+}
+
+// photo: shrunk on the phone to 1600px JPEG before sending
+var photoBlob=null;
+$('f').onchange=function(){
+  var file=this.files[0]; if(!file) return; say('جاري التجهيز...');
+  var img=new Image(); img.onload=function(){
+    var k=Math.min(1, 1600/Math.max(img.width,img.height)), c=document.createElement('canvas');
+    c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    c.toBlob(function(b){ photoBlob=b; $('pv').src=URL.createObjectURL(b); $('pv').className='prev'; say(''); }, 'image/jpeg', 0.85);
+  };
+  img.src=URL.createObjectURL(file);
+};
+function sendPhoto(){ if(!photoBlob){ say('اختر صورة أول'); return; } say('جاري الإرسال...'); post('photo', photoBlob).then(ok).catch(bad); }
+
+// control
+function ctl(what, v){ post(what, v).then(function(){ say('تم ✅'); }).catch(bad); }
+
+// quiz
+// the server gives each phone a private token when it joins: kept here, so a reload or a new game rejoins by itself
+function keep(k, v){ try { if(v===null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch(e){} }
+function kept(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+var me=kept('qName'), qtok=kept('qTok'), lastQ=-1, picked=-1, polling=false, rejoinAt=0;
+function joinAs(n, quiet){
+  return post('quiz/join', n+'\n'+(qtok||'')).then(function(r){ return r.text(); }).then(function(t){
+    if(t.indexOf('ok\n')===0){ me=n; qtok=t.slice(3); keep('qName', me); keep('qTok', qtok);
+      $('qjoin').className='hide'; $('qplay').className=''; if(!quiet) say(''); if(!polling){ polling=true; poll(); } return true; }
+    if(!quiet){
+      if(t==='taken'){ say('هذا الاسم مستخدم في المسابقة · اختر اسماً آخر'); }
+      else {
+        // the quiz is not on the TV yet: the family's phone opens it, a guest waits; either way the name goes in by itself
+        if(!GUEST && !qOpened){ qOpened=true; gameOpen('quiz', true); }
+        say(GUEST ? 'بانتظار فتح المسابقة على التلفزيون… سيدخل اسمك تلقائياً' : 'جارٍ فتح المسابقة على التلفزيون…');
+        joinWait(n);
+      }
+    }
+    return false; });
+}
+var qWait=null, qOpened=false;
+function joinWait(n){
+  clearTimeout(qWait);
+  qWait=setTimeout(function(){
+    if(cur!=='quiz' || $('qplay').className==='') return;   // left the section, or already in
+    joinAs(n, true).then(function(ok){ if(ok) say(''); else joinWait(n); }).catch(function(){ joinWait(n); });
+  }, 3000);
+}
+function join(){ var n=$('qn').value.trim(); if(!n){ say('اكتب اسمك'); return; } joinAs(n).catch(bad); }
+if(me && qtok){ $('qn').value=me; }
+// several players on this one phone: each joins under a name of their own, and they answer one after the other
+var more=[], picks={}, lastSt=null;
+try { more=JSON.parse(kept('qMore')||'[]'); } catch(e){ more=[]; }
+function locals(){ return [{n:me,t:qtok}].concat(more); }
+function nextTurn(){ var L=locals(); for(var i=0;i<L.length;i++){ if(!(L[i].n in picks)) return L[i]; } return null; }
+function showMore(){
+  var el=$('qmore'); el.innerHTML='';
+  if(!more.length) return;
+  el.appendChild(document.createTextNode('اللاعبون على هذا الجوال: '+locals().map(function(p){ return p.n; }).join('، ')+'  ·  '));
+  var a=document.createElement('a'); a.href='#'; a.textContent='إزالة الإضافيين';
+  a.onclick=function(e){ e.preventDefault(); more=[]; keep('qMore','[]'); showMore(); if(lastSt) render(lastSt); };
+  el.appendChild(a);
+}
+function addLocal(){
+  var n=(prompt('اسم اللاعب الآخر')||'').trim().slice(0,16); if(!n) return;
+  if(locals().some(function(p){ return p.n===n; })){ say('هذا الاسم موجود على هذا الجوال'); return; }
+  post('quiz/join', n+'\n').then(function(r){ return r.text(); }).then(function(t){
+    if(t.indexOf('ok\n')===0){ more.push({n:n,t:t.slice(3)}); keep('qMore', JSON.stringify(more)); say(''); showMore();
+      if(lastSt && (lastSt.phase==='question')) render(lastSt); }
+    else say(t==='taken' ? 'هذا الاسم مستخدم في المسابقة · اختر اسماً آخر' : 'المسابقة غير مفتوحة على التلفزيون');
+  }).catch(bad);
+}
+function rejoinMore(){
+  more.forEach(function(p){ post('quiz/join', p.n+'\n'+p.t).then(function(r){ return r.text(); })
+    .then(function(t){ if(t.indexOf('ok\n')===0){ p.t=t.slice(3); keep('qMore', JSON.stringify(more)); } }).catch(function(){}); });
+}
+function verdicts(st){
+  if(!more.length) return st.correctIndex===picks[me] ? 'صح ✓' : 'الجواب: '+st.options[st.correctIndex];
+  return 'الجواب: '+st.options[st.correctIndex]+'\n'+locals().map(function(p){
+    return p.n+': '+(picks[p.n]===st.correctIndex ? 'صح ✓' : (p.n in picks) ? 'خطأ ✗' : 'لم يُجب'); }).join('  ·  ');
+}
+function poll(){
+  fetch('quiz/state?token='+encodeURIComponent(qtok||'')).then(function(r){ return r.json(); }).then(function(st){
+    // the TV opened a new game: back in under the same name
+    if(st.joined===false && me && st.phase!=='end' && Date.now()>rejoinAt){ rejoinAt=Date.now()+4000;
+      joinAs(me, true).then(function(ok){ if(!ok){ $('qjoin').className=''; $('qplay').className='hide'; } else rejoinMore(); }); }
+    lastSt=st;
+    $('qhead').textContent = st.phase==='lobby' ? 'بانتظار بداية المسابقة... (اللاعبون: '+st.players+')'
+      : st.phase==='end' ? 'انتهت المسابقة · نقاطك: '+st.score
+      : 'سؤال '+(st.index+1)+' من '+st.total+' · نقاطك: '+st.score;
+    if(st.phase==='question' || st.phase==='reveal'){
+      if(st.index!==lastQ){ lastQ=st.index; picked=-1; picks={}; render(st); }
+      $('qinfo').textContent = st.phase==='reveal' ? verdicts(st)
+          + (st.note ? '\n\n'+(/^(خطأ|صح):/.test(st.note) ? '' : 'معلومة: ')+st.note : '')
+          : (!nextTurn() ? (more.length ? 'تم استلام الأجوبة' : 'تم استلام جوابك') : '');
+    } else { $('qq').textContent=''; $('qo').innerHTML=''; $('qinfo').textContent=''; }
+  }).catch(function(){}).finally(function(){ setTimeout(poll, 1000); });
+}
+function render(st){
+  var tf = st.mode==='tf';
+  var turn=nextTurn();
+  $('qq').textContent=(more.length && turn ? 'دور '+turn.n+'\n' : '')+st.question; var o=$('qo'); o.innerHTML=''; o.className = tf ? 'opts tf' : 'opts';
+  showMore();
+  st.options.forEach(function(text,i){ var b=document.createElement('button'); b.textContent= tf ? text : ['أ','ب','ج','د'][i]+') '+text;
+    b.onclick=function(){ var t=nextTurn(); if(!t || !turn || t.n!==turn.n) return; picks[t.n]=i; if(t.n===me) picked=i; b.className='picked';
+      post('quiz/answer', t.t+'\n'+i);
+      // the phone goes to the next player on it: their turn after a moment, without the last one's choice showing
+      if(nextTurn()) setTimeout(function(){ if(lastSt && lastSt.index===st.index && lastSt.phase==='question') render(st); }, 500);
+    }; o.appendChild(b); });
+}
+
+// charades: the round's token makes this phone the one that sees the words
+var actToken=null, actTimer=null;
+function actStart(){
+  post('charades/start','').then(function(r){ return r.text(); }).then(function(t){
+    if(t==='no'){ say('افتح «بدون كلام» على التلفزيون، أو انتظر حتى تنتهي الجولة'); return; }
+    actToken=t; say(''); actPoll(); }).catch(bad); }
+function actSend(what){ if(!actToken) return;
+  if(navigator.vibrate) navigator.vibrate(what==='got'?60:25);
+  post('charades/'+what, actToken).then(actPoll).catch(function(){}); }
+function actPoll(){
+  clearTimeout(actTimer);
+  if($('act').className==='hide') return;
+  fetch('charades/state?token='+(actToken||'')).then(function(r){ return r.json(); }).then(function(st){
+    var mine = st.phase==='play' && st.mine;
+    if(st.phase!=='play') actToken=null;
+    $('aplay').className = mine ? '' : 'hide';
+    var wasDraw = $('adraw').className!=='hide';
+    $('adraw').className = mine && st.type==='draw' ? '' : 'hide';
+    if(mine && st.type==='draw' && !wasDraw) afit();
+    if(mine){ $('askip').textContent='تخطٍّ ('+st.skipsLeft+')'; $('askip').disabled = st.skipsLeft<=0; }
+    if(mine && st.word!==lastWord){ lastWord=st.word; if(st.type==='draw') acx.clearRect(0,0,acv.width,acv.height); }
+    $('aidle').className = st.phase==='wait' ? '' : 'hide';
+    var sc = st.teams ? st.teams[0]+' '+st.scores[0]+'  ·  '+st.teams[1]+' '+st.scores[1] : '';
+    $('ahead').textContent = st.phase==='wait' ? 'دور '+st.team+' · الجولة '+st.round+' من '+st.rounds+'\n'+sc
+      : st.phase==='play' ? (mine ? sc : 'الجولة جارية الآن · '+sc)
+      : st.teams ? 'انتهت اللعبة · '+sc : 'افتح «بدون كلام» على التلفزيون أولاً';
+    if(mine){ $('acat').textContent='الفئة: '+st.category; $('aword').textContent=st.word;
+      $('atime').textContent='الوقت: '+Math.ceil(st.left/1000)+' ثانية · الكلمات المعروفة: '+st.got; }
+  }).catch(function(){}).finally(function(){ actTimer=setTimeout(actPoll, 700); });
+}
+
+// the drawing rounds: the same strokes as the 🎨 tab, sent with the round's token
+var acv=$('acv'), acx=acv.getContext('2d'), acol='#ffffff', aq=[], alast=null, acont=false, lastWord='';
+['#ffffff','#f5c542','#4ade80','#f87171','#60a5fa','#c084fc'].forEach(function(c,i){
+  var b=document.createElement('div'); b.className='dot'+(i?'':' on'); b.style.background=c;
+  b.onclick=function(){ acol=c; document.querySelectorAll('#acolors .dot').forEach(function(x){ x.className='dot'; }); b.className='dot on'; };
+  $('acolors').appendChild(b);
+});
+function afit(){ var r=acv.getBoundingClientRect(); acv.width=r.width*2; acv.height=r.height*2; }
+function apt(e){ var r=acv.getBoundingClientRect(); return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]; }
+function aline(a,b){ acx.strokeStyle=acol; acx.lineWidth=6; acx.lineCap='round'; acx.beginPath();
+  acx.moveTo(a[0]*acv.width,a[1]*acv.height); acx.lineTo(b[0]*acv.width,b[1]*acv.height); acx.stroke(); }
+acv.onpointerdown=function(e){ acv.setPointerCapture(e.pointerId); alast=apt(e); acont=false; aq=[alast]; };
+acv.onpointermove=function(e){ if(!alast) return; var p=apt(e); aline(alast,p); alast=p; aq.push(p); };
+acv.onpointerup=acv.onpointercancel=function(){ aflush(); alast=null; };
+function aflush(){ if(aq.length<1 || !actToken) return;
+  var s=(acont?'+':'')+acol+' '+aq.map(function(p){ return p[0].toFixed(4)+','+p[1].toFixed(4); }).join(' ');
+  if(alast){ aq=[alast]; acont=true; } else aq=[]; post('charades/draw', actToken+'\n'+s); }
+setInterval(function(){ if(alast && aq.length>1) aflush(); }, 80);
+function actClear(){ acx.clearRect(0,0,acv.width,acv.height); if(actToken) post('charades/clear', actToken); }
+
+// مين أنا؟
+var whoMe=kept('wName'), whoTok=kept('wTok'), whoTimer=null, whoRejoinAt=0;
+function esc(t){ var d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+var ANS={yes:'✓ نعم',no:'✗ لا',maybe:'أحياناً',idk:'لا أعرف',wrong:'✗ خطأ'};
+function whoJoinAs(n, quiet){
+  return post('who/join', n+'\n'+(whoTok||'')).then(function(r){ return r.text(); }).then(function(t){
+    if(t.indexOf('ok\n')===0){ whoMe=n; whoTok=t.slice(3); keep('wName', whoMe); keep('wTok', whoTok);
+      $('wjoin').className='hide'; $('wplay').className=''; if(!quiet) say(''); whoPoll(); return true; }
+    if(!quiet){
+      if(t==='taken'){ say('هذا الاسم مستخدم في اللعبة · اختر اسماً آخر'); }
+      else {
+        if(!GUEST) gameOpen('who', true);
+        say(GUEST ? 'بانتظار فتح اللعبة على التلفزيون… سيدخل اسمك تلقائياً' : 'جارٍ فتح اللعبة على التلفزيون…');
+        whoWait(n);
+      }
+    }
+    return false; });
+}
+var wWait=null;
+function whoWait(n){
+  clearTimeout(wWait);
+  wWait=setTimeout(function(){
+    if(cur!=='who' || $('wplay').className==='') return;
+    whoJoinAs(n, true).then(function(ok){ if(ok) say(''); else whoWait(n); }).catch(function(){ whoWait(n); });
+  }, 3000);
+}
+function whoJoin(){ var n=$('wn').value.trim(); if(!n){ say('اكتب اسمك'); return; } whoJoinAs(n).catch(bad); }
+if(whoMe){ $('wn').value=whoMe; }
+function whoCmd(c, text){ return post('who/'+c, (whoTok||'')+(text!==undefined?'\n'+text:'')).then(function(r){ return r.text(); }).then(function(t){ whoPoll(); return t; }); }
+function whoAns(k){ if(navigator.vibrate) navigator.vibrate(30); whoCmd('answer', k); }
+function whoAsk(){ var q=$('wq').value.trim(); if(!q) return; whoCmd('ask', q).then(function(t){ if(t==='ok'){ $('wq').value=''; say('وصل سؤالك ✓'); } }); }
+function whoGuess(){ var g=$('wg').value.trim(); if(!g) return;
+  whoCmd('guess', g).then(function(t){ $('wg').value=''; say(t==='right' ? 'صح! عرفتها' : t==='wrong' ? '✗ خطأ، حاول مرة أخرى' : ''); }); }
+function whoPoll(){
+  clearTimeout(whoTimer);
+  fetch('who/state?token='+encodeURIComponent(whoTok||'')).then(function(r){ return r.json(); }).then(function(st){
+    // the TV opened a new game: back in under the same name
+    if(st.joined===false && whoMe && st.phase!=='end' && Date.now()>whoRejoinAt){ whoRejoinAt=Date.now()+4000;
+      whoJoinAs(whoMe, true).then(function(ok){ if(!ok){ $('wjoin').className=''; $('wplay').className='hide'; } }); }
+    var sc=Object.keys(st.scores||{}).map(function(k){ return k+' '+st.scores[k]; }).join(' · ');
+    $('whead').textContent = st.phase==='lobby' ? 'بانتظار البداية… (اللاعبون: '+st.players.length+')\n'+st.players.join('، ')
+      : st.phase==='ask' ? 'الجولة '+st.round+' من '+st.rounds+' · المضيف: '+st.host+' · سؤال '+st.questions+' من '+st.max
+      : st.phase==='reveal' ? (st.winner ? 'عرفها '+st.winner+' (+'+st.points+')' : 'لم يعرفها أحد')+'\nالجواب: '+st.name+'\n'+sc
+      : 'انتهت اللعبة · '+sc;
+    $('whost').className = st.isHost ? '' : 'hide';
+    $('wguess').className = st.phase==='ask' && !st.isHost ? '' : 'hide';
+    if(st.isHost){
+      $('wname').textContent=st.name; $('wcat').textContent='الفئة: '+st.category;
+      $('wfacts').innerHTML=st.facts.map(function(f){ return '<li>'+esc(f)+'</li>'; }).join('');
+      $('wpend').textContent = st.pending.length ? 'سؤال من '+st.pending[0][0]+': '+st.pending[0][1] : 'أجب عن السؤال الذي طُرح بصوت عالٍ';
+      $('whints').textContent = st.allHints.map(function(h,i){ return (i<st.hints.length?'✔ ':'')+h; }).join(' · ');
+      $('whint').disabled = st.hintsLeft<=0;
+    } else { $('wcat2').textContent = 'الفئة: '+st.category; }
+    var lg=(st.log||[]).slice().reverse().slice(0,10);
+    $('wlog').innerHTML = st.phase==='ask' ? lg.map(function(l){
+      return '<li>'+(l[2]==='wrong' ? esc(l[0])+' خمّن «'+esc(l[1])+'» ' : (l[1] ? esc(l[0])+': '+esc(l[1])+' ← ' : 'سؤال ← '))+ANS[l[2]]+'</li>'; }).join('')
+      + (st.hints.length ? '<li>تلميح: '+st.hints.map(esc).join(' · ')+'</li>' : '') : '';
+  }).catch(function(){}).finally(function(){ if($('who').className!=='hide') whoTimer=setTimeout(whoPoll, 1000); });
+}
+// the phone as keyboard and mouse
+var padQ=[], padBusy=false, mdx=0, mdy=0, sdy=0;
+function padSend(c){ padQ.push(c); padPump(); }
+function padPump(){
+  if(padBusy || !padQ.length) return;
+  padBusy=true;
+  post('pad', padQ.shift()).catch(function(){}).then(function(){ padBusy=false; padPump(); });
+}
+function padKey(k){ padSend('k '+k); }
+// the real touches: asked for when the pad opens; the TV asks its owner once
+function padPrecise(){
+  post('pad/precise', '').then(function(r){ return r.text(); }).then(padShowState).catch(function(){});
+  var n=0; (function again(){ if(cur!=='pad' || ++n>40) return;
+    fetch('pad/state').then(function(r){ return r.text(); }).then(function(t){ padShowState(t); if(t.indexOf('ready|')!==0) setTimeout(again, 3000); }).catch(function(){}); })();
+}
+// the pad fills what is left of the phone's screen: the touchpad as large as it can be, the remote always in sight
+function padFit(){
+  var p=$('pad'); if(p.className==='hide') return;
+  p.style.height=Math.max(420, window.innerHeight - p.getBoundingClientRect().top - 10)+'px';
+}
+window.addEventListener('resize', padFit);
+function padShowState(t){ var i=t.indexOf('|'); $('padst').textContent = i>=0 ? (t.indexOf('ready|')===0 ? '🎯 ' : '⚠ ')+t.slice(i+1) : ''; if(i<1) $('padst').textContent=''; }
+function padClear(){ var t=document.getElementById('pt'); t.value=''; padSend('t '); t.focus(); }
+// moves and scrolls are summed while a request is on its way, so the pointer never lags behind a queue
+setInterval(function(){
+  if(padBusy) return;
+  if(mdx||mdy){ padSend('m '+Math.round(mdx)+' '+Math.round(mdy)); mdx=0; mdy=0; }
+  else if(Math.abs(sdy)>=45){ padSend('s '+(sdy<0?-1:1)); sdy=0; }
+}, 40);
+(function(){
+  var t=document.getElementById('pt');
+  t.addEventListener('input', function(){
+    // only the newest text matters
+    padQ=padQ.filter(function(c){ return c.charAt(0)!=='t'; });
+    padSend('t '+t.value);
+  });
+  t.addEventListener('keydown', function(e){ if(e.key==='Enter'){ padKey('enter'); t.blur(); } });
+  var tp=document.getElementById('tp'), lx=0, ly=0, moved=0, fingers=0, t0=0;
+  tp.addEventListener('touchstart', function(e){
+    e.preventDefault();
+    fingers=e.touches.length; lx=e.touches[0].clientX; ly=e.touches[0].clientY;
+    if(fingers===1){ moved=0; t0=Date.now(); }
+  }, {passive:false});
+  tp.addEventListener('touchmove', function(e){
+    e.preventDefault();
+    var x=e.touches[0].clientX, y=e.touches[0].clientY, dx=x-lx, dy=y-ly;
+    lx=x; ly=y; moved+=Math.abs(dx)+Math.abs(dy);
+    if(e.touches.length>=2){ sdy+=dy; return; }
+    // faster fingers go further, slow ones stay precise
+    var k=3+Math.min(6, (Math.abs(dx)+Math.abs(dy))/6);
+    mdx+=dx*k; mdy+=dy*k;
+  }, {passive:false});
+  tp.addEventListener('touchend', function(e){
+    e.preventDefault();
+    if(e.touches.length===0){
+      var dt=Date.now()-t0;
+      if(fingers===1 && moved<18) padSend(dt<450 ? 'c' : 'r');
+      fingers=0;
+    } else { lx=e.touches[0].clientX; ly=e.touches[0].clientY; }
+  }, {passive:false});
+  // the strip on the side: drag it to scroll (up: the list goes on, the next video)
+  var sc=document.getElementById('tpsc'), sy=0;
+  sc.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); sy=e.touches[0].clientY; }, {passive:false});
+  sc.addEventListener('touchmove', function(e){ e.preventDefault(); e.stopPropagation(); var y=e.touches[0].clientY; sdy+=(y-sy)*1.4; sy=y; }, {passive:false});
+  sc.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); }, {passive:false});
+})();
+function solisSave(){
+  var a=document.getElementById('sk1').value.trim(), b=document.getElementById('sk2').value.trim();
+  if(!a||!b){ say('اكتب الرقمين أول'); return; }
+  post('solis', a+'\n'+b).then(function(){ document.getElementById('sk2').value=''; say('انحفظ ✅ افتح كرت الطاقة الشمسية بالتلفزيون'); }).catch(bad);
+}
+// reminders: a note that comes up on the TV at its time
+function remindShow(t){ document.getElementById('rlist').textContent = t ? 'التذكيرات الجاية:\n' + t : ''; }
+function remind(when){
+  var t=document.getElementById('rt');
+  if(!t.value.trim()){ say('اكتب الملاحظة أول'); return; }
+  if(!when){ say('اختار الساعة أول'); return; }
+  post('remind', when + String.fromCharCode(10) + t.value).then(function(r){ return r.text(); }).then(function(x){
+    if(x.indexOf('ok') !== 0){ say('ما انحفظ التذكير، جرّب مرة تانية'); return; }
+    var lines = x.split(String.fromCharCode(10));
+    say('تمام ✅ رح يطلع على التلفزيون الساعة ' + lines[1]);
+    t.value=''; remindShow(lines.slice(2).join(String.fromCharCode(10)));
+  }).catch(bad);
+}
+function remindClear(){ post('remind/clear', '').then(function(){ remindShow(''); say('انمسحت التذكيرات'); }).catch(bad); }
+fetch('remind/list').then(function(r){ return r.text(); }).then(remindShow).catch(function(){});
+</script>
+</body>
+</html>

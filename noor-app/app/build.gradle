@@ -1,0 +1,215 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'app.noortv'
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 28
+        targetSdk 34
+        versionCode 5
+        versionName '1.0'
+        buildConfigField 'double', 'LAT', project.property('noor.lat')
+        buildConfigField 'double', 'LON', project.property('noor.lon')
+        buildConfigField 'int', 'METHOD', project.property('noor.method')
+        // A card that opens an activity of another app (TARGET) or plays a live audio stream (STREAM) instead of a video
+        buildConfigField 'String', 'TARGET', '""'
+        buildConfigField 'String', 'STREAM', '""'
+        buildConfigField 'boolean', 'WIRD', 'false'
+    }
+
+    // One small app per shortcut, so each gets its own tile on the home screen.
+    flavorDimensions = ['item']
+    productFlavors {
+        kahf {
+            dimension 'item'
+            applicationId 'app.noortv.kahf'
+            resValue 'string', 'app_name', 'شاشة البيت'   // the core app (adhan, phone page): its name in the TV's lists (VPN, settings); the surah keeps its own card
+            buildConfigField 'String', 'VIDEO', '"9k1U0aGQRNA"'
+            buildConfigField 'boolean', 'REMINDERS', 'true'
+        }
+        baqara {
+            dimension 'item'
+            applicationId 'app.noortv.baqara'
+            resValue 'string', 'app_name', 'سورة البقرة'
+            buildConfigField 'String', 'VIDEO', '"9HW7j9lZZTU"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        sabah {
+            dimension 'item'
+            applicationId 'app.noortv.sabah'
+            resValue 'string', 'app_name', 'أذكار الصباح'
+            buildConfigField 'String', 'VIDEO', '"fD4uDIoCn3M"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        masa {
+            dimension 'item'
+            applicationId 'app.noortv.masa'
+            resValue 'string', 'app_name', 'أذكار المساء'
+            buildConfigField 'String', 'VIDEO', '"rQnNno3Do60"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        ruqya {
+            dimension 'item'
+            applicationId 'app.noortv.ruqya'
+            resValue 'string', 'app_name', 'الرقية الشرعية'
+            buildConfigField 'String', 'VIDEO', '"BVtCjMyJ320"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        yasin {
+            dimension 'item'
+            applicationId 'app.noortv.yasin'
+            resValue 'string', 'app_name', 'سورة يس'
+            buildConfigField 'String', 'VIDEO', '"ZdsddmOvu5E"'   // Alafasy's official channel
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        mulk {
+            dimension 'item'
+            applicationId 'app.noortv.mulk'
+            resValue 'string', 'app_name', 'سورة الملك'
+            buildConfigField 'String', 'VIDEO', '"IDvV7Tvt8gM"'   // Alafasy's official channel
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        radio {
+            dimension 'item'
+            applicationId 'app.noortv.radio'
+            resValue 'string', 'app_name', 'إذاعة القرآن الكريم'
+            buildConfigField 'String', 'VIDEO', '""'
+            // إذاعة القرآن الكريم - السعودية, live, from the mp3quran.net radio list
+            buildConfigField 'String', 'STREAM', '"https://stream.radiojar.com/0tpy1h0kxtzuv"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        wird {
+            dimension 'item'
+            applicationId 'app.noortv.wird'
+            resValue 'string', 'app_name', 'الورد اليومي'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'boolean', 'WIRD', 'true'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        nawm {
+            dimension 'item'
+            applicationId 'app.noortv.nawm'
+            resValue 'string', 'app_name', 'أذكار النوم'
+            buildConfigField 'String', 'VIDEO', '"5HmvokzY3Jg"'   // Alafasy's official channel
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        week {
+            dimension 'item'
+            applicationId 'app.noortv.week'
+            resValue 'string', 'app_name', 'مواقيت الأسبوع'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"com.gathin.tvhome/com.gathin.tvhome.NoorWeekActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        hifz {
+            dimension 'item'
+            applicationId 'app.noortv.hifz'
+            resValue 'string', 'app_name', 'مُحفّظ القرآن'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.HifzActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        hadith {
+            dimension 'item'
+            applicationId 'app.noortv.hadith'
+            resValue 'string', 'app_name', 'حديث اليوم'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.HadithActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        // «شاشة الكمبيوتر»: the PC's desktop on the TV through Moonlight (Sunshine on the PC), straight in
+        status {
+            dimension 'item'
+            applicationId 'app.noortv.status'
+            resValue 'string', 'app_name', 'حالة البيت'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.StatusActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        apps {
+            dimension 'item'
+            applicationId 'app.noortv.apps'
+            resValue 'string', 'app_name', 'مدير التطبيقات'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.AppsActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        matches {
+            dimension 'item'
+            applicationId 'app.noortv.matches'
+            resValue 'string', 'app_name', 'المباريات'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.MatchesActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        energy {
+            dimension 'item'
+            applicationId 'app.noortv.energy'
+            resValue 'string', 'app_name', 'الطاقة الشمسية'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.EnergyActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        deen {
+            dimension 'item'
+            applicationId 'app.noortv.deen'
+            resValue 'string', 'app_name', 'القرآن والأذكار'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.FolderActivity$Deen"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        house {
+            dimension 'item'
+            applicationId 'app.noortv.house'
+            resValue 'string', 'app_name', 'البيت والتحكم'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.FolderActivity$House"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        pc {
+            dimension 'item'
+            applicationId 'app.noortv.pc'
+            resValue 'string', 'app_name', 'شاشة الكمبيوتر'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"pc"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        games {
+            dimension 'item'
+            applicationId 'app.noortv.games'
+            resValue 'string', 'app_name', 'ألعاب العائلة'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"app.noortv.kahf/app.noortv.GamesActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+        control {
+            dimension 'item'
+            applicationId 'app.noortv.control'
+            resValue 'string', 'app_name', 'مركز التحكم'
+            buildConfigField 'String', 'VIDEO', '""'
+            buildConfigField 'String', 'TARGET', '"com.gathin.tvhome/com.gathin.tvhome.NoorSettingsActivity"'
+            buildConfigField 'boolean', 'REMINDERS', 'false'
+        }
+    }
+
+    buildFeatures { buildConfig true }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Sideloaded over ADB like the launcher: signed with the debug key.
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // the phone page link as a QR code (scan it with the phone camera)
+    implementation "com.google.zxing:core:3.5.3"
+}

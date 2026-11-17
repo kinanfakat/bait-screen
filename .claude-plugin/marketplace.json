@@ -1,0 +1,7 @@
+{
+  "name": "bait-screen",
+  "owner": { "name": "kinanfakat" },
+  "plugins": [
+    { "name": "bait-screen", "source": "./", "description": "خلّي تلفزيونك يأذّن ويذكّرك بالله، بلا إعلانات", "version": "1.0.0" }
+  ]
+}

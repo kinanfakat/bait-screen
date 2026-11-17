@@ -1,0 +1,59 @@
+{
+    "dock_apps": [
+        "app.noortv.deen",
+        "app.noortv.games",
+        "app.noortv.house",
+        "com.google.android.youtube.tv"
+    ],
+    "shamsi_date": true,
+    "wallpaper": true,
+    "wallpaper_dim": 0,
+    "dock_opacity": 70,
+    "wallpaper_true_color": true,
+    "wallpaper_rotation_minutes": 30,
+    "wallpaper_moods": {
+        "morning": [
+            "damascus_morning.jpg"
+        ],
+        "evening": [
+            "damascus_evening.jpg"
+        ],
+        "night": [
+            "damascus_night.jpg"
+        ]
+    },
+    "wallpaper_order": "sequential",
+    "background_color": "#0a1126",
+    "dock_glass": true,
+    "glass_style": "glass",
+    "ambient_glow": false,
+    "columns": 6,
+    "show_network_pill": false,
+    "icon_only_inputs": true,
+    "home_idle_clock_minutes": 10,
+    "back_opens_clock": true,
+    "clock_wallpaper": true,
+    "hidden_apps": [
+        "app.noortv.radio",
+        "app.noortv.control",
+        "app.noortv.wird",
+        "app.noortv.hadith",
+        "app.noortv.status",
+        "app.noortv.kahf",
+        "app.noortv.baqara",
+        "app.noortv.yasin",
+        "app.noortv.mulk",
+        "app.noortv.sabah",
+        "app.noortv.masa",
+        "app.noortv.ruqya",
+        "app.noortv.nawm",
+        "app.noortv.week",
+        "app.noortv.hifz"
+    ],
+    "header_white": true,
+    "clock_format": "12",
+    "dock_title": false,
+    "power_on_home_always": true,
+    "key_filter": false,
+    "date_below_clock": true
+}

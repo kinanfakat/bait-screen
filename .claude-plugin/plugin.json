@@ -1,0 +1,8 @@
+{
+  "name": "bait-screen",
+  "version": "1.0.0",
+  "description": "شاشة البيت: خلّي تلفزيون أندرويد/غوغل تي في يأذّن بوقته ويذكّرك بالله، بلا إعلانات. Claude بيمشّيك خطوة خطوة.",
+  "author": { "name": "kinanfakat" },
+  "homepage": "https://github.com/kinanfakat/bait-screen",
+  "license": "MIT"
+}
